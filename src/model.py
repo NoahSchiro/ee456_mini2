@@ -19,8 +19,8 @@ class Model(nn.Module):
 
         self.flatten = nn.Flatten()
 
-        # MLP at the end to classify
-        self.l1 = nn.Linear(248*16*16, 4096)
+        # MLP at the end to classify 
+        self.l1 = nn.Linear(253952, 4096)
         self.l2 = nn.Linear(4096, 10)
     
     def forward(self, img):
@@ -38,10 +38,9 @@ class Model(nn.Module):
         img = F.relu(img, inplace=True)
         
         img = self.drop(img)
-        # By this point, our image is 248 x 16 x 16
         
         vec = self.flatten(img)
-        # Now it is 63488 element long vector
+        # Now it is 253952 element long vector
 
         # Classify using MLP
         vec = self.l1(vec)

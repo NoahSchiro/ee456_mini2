@@ -18,7 +18,7 @@ if __name__=="__main__":
     model = Model()
 
     # batch, channels, height, width
-    random_img = torch.randn(32, 3, 16, 16)
+    random_img = torch.randn(32, 3, 32, 32)
 
     out = model(random_img)
 
