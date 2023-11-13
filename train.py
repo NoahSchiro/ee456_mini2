@@ -1,6 +1,10 @@
 import torch
 
 from src.model import Model
+from src.data import get_data 
+
+# Debugging
+import matplotlib.pyplot as plt
 
 DEVICE   = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 BATCH_SZ = 32
@@ -17,9 +21,7 @@ if __name__=="__main__":
 
     model = Model()
 
-    # batch, channels, height, width
-    random_img = torch.randn(32, 3, 32, 32)
+    train_ds, test_ds = get_data()
 
-    out = model(random_img)
-
-    print(out[0])
+    # Debugging
+    image = train_ds[0][0]
