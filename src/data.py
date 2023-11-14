@@ -4,8 +4,8 @@ from torchvision import transforms as T
 def get_data():
 
     transform = T.Compose([
-        T.ToTensor()
-        # TODO: May want to also normalize the data
+        T.ToTensor(),
+        T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
 
     train = CIFAR10("./data", train=True, transform=transform) 

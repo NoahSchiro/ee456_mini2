@@ -26,16 +26,16 @@ class Model(nn.Module):
     def forward(self, img):
 
         img = self.c1(img)
-        img = self.p1(img)
         img = F.relu(img, inplace=True)
+        img = self.p1(img)
 
         img = self.c2(img)
-        img = self.p2(img)
         img = F.relu(img, inplace=True)
+        img = self.p2(img)
 
         img = self.c3(img)
-        img = self.p3(img)
         img = F.relu(img, inplace=True)
+        img = self.p3(img)
 
         img = self.drop(img)
         
