@@ -1,14 +1,18 @@
 import torch
 from torch.utils.data import DataLoader
+from torch.cuda.amp import autocast, GradScaler
 
 from src.model import Model
 from src.data import get_data 
 
 # TODO: Device will be implemented on everything once we get to the optimization stage
 DEVICE   = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-BATCH_SZ = 16
+CPUCORES = 8
+BATCH_SZ = 64
 EPOCHS   = 15
 LR       = 4e-3
+
+scalar  = GradScaler()
 
 def train(model, train_dl, optim, loss_fn):
 
@@ -18,13 +22,17 @@ def train(model, train_dl, optim, loss_fn):
 
     for batch, (imgs, labels) in enumerate(train_dl):
 
+        imgs, labels = imgs.to(DEVICE), labels.to(DEVICE)
+
         optim.zero_grad()
 
-        predictions = model(imgs)
-        
-        loss = loss_fn(predictions, labels)
-        loss.backward()
-        optim.step()
+        with autocast():
+            predictions = model(imgs)
+            loss = loss_fn(predictions, labels)
+
+        scalar.scale(loss).backward()
+        scalar.step(optim)
+        scalar.update()
         
         avg_loss += loss
 
@@ -46,6 +54,8 @@ def test(model, test_dl):
     
     for (imgs, labels) in test_dl:
 
+        imgs, labels = imgs.to(DEVICE), labels.to(DEVICE)
+        
         predictions = model(imgs)
         
         avg_loss += loss_fn(predictions, labels)
@@ -61,7 +71,7 @@ def test(model, test_dl):
 
 if __name__=="__main__":
 
-    model   = Model()
+    model   = Model().to(DEVICE)
     optim   = torch.optim.SGD(model.parameters(), lr=LR)
     loss_fn = torch.nn.CrossEntropyLoss()
 
@@ -73,9 +83,8 @@ if __name__=="__main__":
     print(f"Train size = {len(train_ds)}")
     print(f"Test size = {len(test_ds)}")
 
-    # TODO: In optimization we need to pin memory and increase worker count
-    train_dl = DataLoader(train_ds, batch_size=BATCH_SZ, shuffle=True)
-    test_dl  = DataLoader(test_ds, batch_size=BATCH_SZ, shuffle=True)
+    train_dl = DataLoader(train_ds, batch_size=BATCH_SZ, shuffle=True, pin_memory=True, num_workers=CPUCORES)
+    test_dl  = DataLoader(test_ds,  batch_size=BATCH_SZ, shuffle=True, pin_memory=True, num_workers=CPUCORES)
 
     for epoch in range(1, EPOCHS+1):
 
