@@ -7,36 +7,36 @@ class Model(nn.Module):
         super().__init__()
 
         self.c1 = nn.Conv2d(3, 64, kernel_size=3, padding=1, bias=False)
-        self.b1 = nn.BatchNorm2d(64)
+        self.p1 = nn.MaxPool2d(3)
 
         self.c2 = nn.Conv2d(64, 64, kernel_size=3, padding=1, bias=False)
-        self.b2 = nn.BatchNorm2d(64)
+        self.p2 = nn.MaxPool2d(3)
 
         self.c3 = nn.Conv2d(64, 248, kernel_size=3, padding=1, bias=False)
-        self.b3 = nn.BatchNorm2d(248)
+        self.p3 = nn.MaxPool2d(3)
 
-        self.drop = nn.Dropout2d(0.5)
+        self.drop = nn.Dropout(p=0.5)
 
         self.flatten = nn.Flatten()
 
         # MLP at the end to classify 
-        self.l1 = nn.Linear(253952, 4096)
-        self.l2 = nn.Linear(4096, 10)
+        self.l1 = nn.Linear(248, 1024)
+        self.l2 = nn.Linear(1024, 10)
     
     def forward(self, img):
 
         img = self.c1(img)
-        img = self.b1(img)
+        img = self.p1(img)
         img = F.relu(img, inplace=True)
 
         img = self.c2(img)
-        img = self.b2(img)
+        img = self.p2(img)
         img = F.relu(img, inplace=True)
 
         img = self.c3(img)
-        img = self.b3(img)
+        img = self.p3(img)
         img = F.relu(img, inplace=True)
-        
+
         img = self.drop(img)
         
         vec = self.flatten(img)

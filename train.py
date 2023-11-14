@@ -1,4 +1,5 @@
 import torch
+from torch.utils.data import DataLoader
 
 from src.model import Model
 from src.data import get_data 
@@ -23,5 +24,12 @@ if __name__=="__main__":
 
     train_ds, test_ds = get_data()
 
+    train_dl = DataLoader(train_ds, batch_size=BATCH_SZ)
+
     # Debugging
-    image = train_ds[0][0]
+    for (img, label) in train_dl:
+        out = model(img)
+
+        print(out)
+
+        exit(0)
