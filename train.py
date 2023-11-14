@@ -6,9 +6,9 @@ from src.data import get_data
 
 # TODO: Device will be implemented on everything once we get to the optimization stage
 DEVICE   = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-BATCH_SZ = 64
+BATCH_SZ = 16
 EPOCHS   = 15
-LR       = 1e-3
+LR       = 4e-3
 
 def train(model, train_dl, optim, loss_fn):
 
@@ -22,14 +22,16 @@ def train(model, train_dl, optim, loss_fn):
 
         predictions = model(imgs)
         
-        avg_loss += loss_fn(predictions, labels)
-
-        if batch % 100 == 0:
-            avg_loss /= 100
-            print(f"Batch: {batch:4d}/{len(train_dl):4d} | Avg loss: {avg_loss:.5f}")
-            avg_loss = 0
-
+        loss = loss_fn(predictions, labels)
+        loss.backward()
         optim.step()
+        
+        avg_loss += loss
+
+        if batch % 100 == 0 and batch != 0:
+            avg_loss /= 100
+            print(f"Batch: {batch:3d}/{len(train_dl):3d} | Avg loss: {avg_loss:.5f}")
+            avg_loss = 0
 
 
 @torch.no_grad()
@@ -73,7 +75,7 @@ if __name__=="__main__":
 
     # TODO: In optimization we need to pin memory and increase worker count
     train_dl = DataLoader(train_ds, batch_size=BATCH_SZ, shuffle=True)
-    test_dl = DataLoader(train_ds, batch_size=BATCH_SZ, shuffle=True)
+    test_dl  = DataLoader(test_ds, batch_size=BATCH_SZ, shuffle=True)
 
     for epoch in range(1, EPOCHS+1):
 

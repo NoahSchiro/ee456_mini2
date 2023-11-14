@@ -46,8 +46,6 @@ class Model(nn.Module):
         vec = self.l1(vec)
         vec = F.relu(vec, inplace=True)
         vec = self.l2(vec)
-
-        logits = F.softmax(vec, dim=1)
-
-        return logits
+        
+        return vec 
 
