@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
 from torch.cuda.amp import autocast, GradScaler
+from torch.optim.lr_scheduler import ExponentialLR
 
 from src.model import Model
 from src.data import get_data 
@@ -9,8 +10,9 @@ from src.data import get_data
 DEVICE   = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 CPUCORES = 8
 BATCH_SZ = 64
-EPOCHS   = 15
-LR       = 4e-3
+EPOCHS   = 50
+LR       = .1
+LR_GAMMA = 0.975
 
 scalar  = GradScaler()
 
@@ -65,7 +67,7 @@ def test(model, test_dl):
 
     print(f"End of epoch test complete")
     print(f"Accuracy: {correct / len(test_dl.dataset) * 100:3.2f}%")
-    print(f"Avg_loss: {avg_loss / len(test_dl.dataset):3.2f}")
+    print(f"Avg_loss: {avg_loss / len(test_dl.dataset):3.5f}")
 
 
 
@@ -74,6 +76,10 @@ if __name__=="__main__":
     model   = Model().to(DEVICE)
     optim   = torch.optim.SGD(model.parameters(), lr=LR)
     loss_fn = torch.nn.CrossEntropyLoss()
+    scheduler = ExponentialLR(optim, gamma=LR_GAMMA)
+    
+    for param_group in optim.param_groups:
+        print(param_group['lr'])
 
     print(f"Loaded model with {sum(p.numel() for p in model.parameters())} parameters...")
 
@@ -91,3 +97,6 @@ if __name__=="__main__":
         print(f"Epoch {epoch}")
         train(model, train_dl, optim, loss_fn)
         test(model, test_dl)
+        scheduler.step()
+        for param_group in optim.param_groups:
+            print(param_group['lr'])

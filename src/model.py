@@ -12,16 +12,18 @@ class Model(nn.Module):
         self.c2 = nn.Conv2d(64, 64, kernel_size=3, padding=1, bias=False)
         self.p2 = nn.MaxPool2d(3)
 
-        self.c3 = nn.Conv2d(64, 248, kernel_size=3, padding=1, bias=False)
+        self.c3 = nn.Conv2d(64, 64, kernel_size=3, padding=1, bias=False)
         self.p3 = nn.MaxPool2d(3)
 
-        self.drop = nn.Dropout(p=0.5)
+        self.drop = nn.Dropout(p=0.1)
 
         self.flatten = nn.Flatten()
 
         # MLP at the end to classify 
-        self.l1 = nn.Linear(248, 1024)
+        self.l1 = nn.Linear(64, 1024)
         self.l2 = nn.Linear(1024, 10)
+        
+        self.softmax = nn.Softmax(dim=1)
     
     def forward(self, img):
 
@@ -47,5 +49,7 @@ class Model(nn.Module):
         vec = F.relu(vec, inplace=True)
         vec = self.l2(vec)
         
-        return vec 
+        logits = self.softmax(vec)
+        
+        return logits 
 
