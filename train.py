@@ -2,6 +2,7 @@ import torch
 from torch.utils.data import DataLoader
 from torch.cuda.amp import autocast, GradScaler
 from torch.optim.lr_scheduler import ExponentialLR
+from torch.nn.utils import clip_grad_norm_
 
 from src.model import Model
 from src.data import get_data 
@@ -12,7 +13,8 @@ CPUCORES = 8
 BATCH_SZ = 64
 EPOCHS   = 50
 LR       = .1
-LR_GAMMA = 0.975
+LR_GAMMA = 0.95
+# MAX_CLIP = 10
 
 scalar  = GradScaler()
 
@@ -33,6 +35,7 @@ def train(model, train_dl, optim, loss_fn):
             loss = loss_fn(predictions, labels)
 
         scalar.scale(loss).backward()
+        # clip_grad_norm_(model.parameters(), MAX_CLIP)
         scalar.step(optim)
         scalar.update()
         
@@ -100,3 +103,5 @@ if __name__=="__main__":
         scheduler.step()
         for param_group in optim.param_groups:
             print(param_group['lr'])
+    
+    torch.save(model.state_dict(), "saved_CNN.pt")
