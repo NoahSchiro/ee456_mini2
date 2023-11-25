@@ -104,4 +104,4 @@ if __name__=="__main__":
         for param_group in optim.param_groups:
             print(param_group['lr'])
     
-    torch.save(model.state_dict(), "saved_CNN.pt")
+    torch.save(model.state_dict(), "saved_CNN_small.pt")
