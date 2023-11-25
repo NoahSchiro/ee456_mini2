@@ -6,7 +6,7 @@ from torch.nn.utils import clip_grad_norm_
 
 # Our code
 from src.model import Model
-from src.data import get_data 
+from src.data import get_data, class_map
 
 # Data reporting
 import matplotlib.pyplot as plt
@@ -17,7 +17,7 @@ import seaborn as sns
 DEVICE   = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 CPUCORES = 8
 BATCH_SZ = 64
-EPOCHS   = 50
+EPOCHS   = 5
 LR       = .1
 LR_GAMMA = 0.95
 # MAX_CLIP = 10
@@ -27,7 +27,8 @@ scalar  = GradScaler()
 # Some globally needed variables for reporting metrics
 training_loss_history   = []
 validation_loss_history = []
-accuracy_history        = []
+train_accuracy_history  = []
+val_accuracy_history    = []
 con_max                 = None
 precision               = None
 recall                  = None
@@ -37,6 +38,8 @@ def train(model, train_dl, optim, loss_fn):
     model.train()
 
     avg_loss = 0
+
+    correct = 0
 
     for batch, (imgs, labels) in enumerate(train_dl):
 
@@ -55,11 +58,19 @@ def train(model, train_dl, optim, loss_fn):
         
         avg_loss += loss
 
+        # Compute how many were correct
+        _, predictions = torch.max(predictions, 1)
+        correct += (predictions == labels).sum().item()
+
         if batch % 100 == 0 and batch != 0:
             avg_loss /= 100
             training_loss_history.append(avg_loss.item())
             print(f"Batch: {batch:3d}/{len(train_dl):3d} | Avg loss: {avg_loss:.5f}")
             avg_loss = 0
+
+    correct /= len(train_dl.dataset)
+    correct *= 100
+    train_accuracy_history.append(correct)
 
 
 @torch.no_grad()
@@ -97,7 +108,7 @@ def test(model, test_dl):
     print(f"Avg_loss: {avg_loss:3.5f}")
     
     validation_loss_history.append(avg_loss)
-    accuracy_history.append(correct)
+    val_accuracy_history.append(correct)
     all_preds = np.array(all_preds)
     all_labels = np.array(all_labels)
     global con_max, precision, recall
@@ -124,7 +135,8 @@ def generate_graphs():
     plt.clf()
 
     # Accuracy graph
-    plt.plot(np.arange(1, EPOCHS+1), accuracy_history, 'r', label='Accuracy')
+    plt.plot(np.arange(1, EPOCHS+1), train_accuracy_history, 'b', label='Train accuracy')
+    plt.plot(np.arange(1, EPOCHS+1), val_accuracy_history, 'r', label='Validation accuracy')
     plt.title('Changes in accuracy over time')
     plt.xlabel('Epochs')
     plt.ylabel('Accuracy')
@@ -134,7 +146,9 @@ def generate_graphs():
 
     # Confusion matrix
     plt.figure(figsize=(10,10))
-    sns.heatmap(con_max, annot=True, fmt="d", cmap="Blues", xticklabels=np.arange(10), yticklabels=np.arange(10))
+    sns.heatmap(con_max, annot=True, fmt="d", cmap="Blues", 
+                xticklabels=[class_map[i] for i in sorted(class_map.keys())],
+                yticklabels=[class_map[i] for i in sorted(class_map.keys())])
     plt.title('Confusion Matrix')
     plt.xlabel('Predicted')
     plt.ylabel('Actual')
@@ -144,7 +158,7 @@ def generate_graphs():
     # Print precision and recall for each class
     global precision, recall
     for class_label, precision, recall in zip(range(10), precision, recall):
-        print(f'Class {class_label}: Precision={precision:.4f}, Recall={recall:.4f}')
+        print(f'Class {class_map[class_label]}: Precision={precision:.4f}, Recall={recall:.4f}')
 
 def display_images(model, test_ds):
     random_images = [test_ds[i][0] for i in range(10)]
@@ -156,7 +170,7 @@ def display_images(model, test_ds):
     for i in range(len(random_images)):
         plt.subplot(2, 5, i+1)
         plt.imshow(random_images[i].permute(1,2,0))
-        plt.title(f"Prediction: {predictions[i]}; {probs[i]*100:.2f}%")
+        plt.title(f"Prediction: {class_map[predictions[i].item()]}; {probs[i]*100:.2f}%")
         plt.axis("off")
 
     plt.savefig("./report/example_predictions.png")
