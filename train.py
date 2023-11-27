@@ -17,7 +17,7 @@ import seaborn as sns
 DEVICE   = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 CPUCORES = 8
 BATCH_SZ = 64
-EPOCHS   = 5
+EPOCHS   = 50
 LR       = .1
 LR_GAMMA = 0.95
 # MAX_CLIP = 10
@@ -169,7 +169,7 @@ def display_images(model, test_ds):
     plt.figure(figsize=(15,8))
     for i in range(len(random_images)):
         plt.subplot(2, 5, i+1)
-        plt.imshow(random_images[i].permute(1,2,0))
+        plt.imshow((random_images[i].permute(1,2,0)/2)+0.5)
         plt.title(f"Prediction: {class_map[predictions[i].item()]}; {probs[i]*100:.2f}%")
         plt.axis("off")
 

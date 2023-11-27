@@ -6,7 +6,7 @@
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage[font=footnotesize]{caption}
-\graphicspath{ {../Images/} }
+\graphicspath{ {./} }
 
 \begin{document}
 \bibliographystyle{plain}
@@ -110,10 +110,42 @@ In the interest of time and resources, several strides were also made to decreas
 
 On top of this, this GPU happens to use the Ampere architecture, which contains tensor cores. These cores should see a 2-3x speed up if we decide to use automatic mixed precision (AMP). This should also decrease our memory requirements and therefore increase our batch size. With these considerations in mind, we did take advantage of AMP optimizations.
 
-With these considerations taken into account, we were able to acheive a training time of 2 minutes and 56 seconds for a model that acheives 73\% accuracy.
+With these considerations taken into account, we were able to acheive a training time of 2 minutes and 56 seconds for a model that acheives 72\% accuracy.
 
 
 \section{Results}
 
+The CNN perfomred very well.  The model reached a validation accuracy of 72.61\% and a validation loss of 1.73609. We found 50 epochs optimized the model without wasting extra compute time. The plots of accuracy vs epochs and loss vs epochs is shown in Figure 1. Figure 1 shows that there is a discrepency between the training and testing dataset, as three is a clear separation between the training and testing datatsets in both accuracy and loss. This incidcates the model is slightly overfitting the training dataset, so randomly choosing training and testing datasets ourselves or using cross-validation might have been advantageous.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale = 0.5]{accuracy}
+\includegraphics[scale = 0.5]{loss}
+\caption{Plot of the accuracy vs epochs (Left) and the plot of the loss vs epochs (Right)}
+\end{figure}
+
+The confusin matrix of the model is shown in Figure 2. Correctly classified datapoints appear along the primary diagonal, and Figure 2 shows that the model performed quite well. However, there are some classes that the model struggles to separate, although these classes are logical such as cats and dogs, and ships and airplanes.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale = 0.5]{confusion_matrix}
+\caption{Plot of the confusion matrix}
+\end{figure}
+
+Looking at some example images and their classifications shown in Figure 3, it appears the model is quite accurate, acheiveing a confidence of over 98\% on most of the images. However, these example images do show some of the innacuracies in the model. The model incorrectly classified the frog in the top right, which the model classified as a deer with a decent confidence, which indicates it has learned that deer are brown shapes with green backgrounds. Additionally, the models struggled to accurately predict the automobile in the second row and second coluimn.  It did accurately predict the class, however it only was about 50\% confident in its prediction, which is considerably lower than the confidence levels of the other examples.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale = 0.5]{example_predictions}
+\caption{Image of some example images and their classifications}
+\end{figure}
+
+The precision and recall can be seen in Figure 4. The precisiona and recall for each class are quiet similar, which incicatres the model is not prioritizing or leaving behind any of the classes. The best classes are Ships and Automobiles with both precision and recalls above 0.8, and the worst are Cats and Dogs, which have precison and recall below 0.6.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale = 0.8]{precision_and_recall}
+\caption{Image of the precsioon and recall for each class}
+\end{figure}
 
 \end{document}
